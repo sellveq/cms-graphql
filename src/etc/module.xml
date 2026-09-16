@@ -1,22 +1,27 @@
 <?xml version="1.0"?>
+
 <!--
 /**
- * ScandiPWA - Progressive Web App for Magento
- *
- * Copyright © Scandiweb, Inc. All rights reserved.
+ * @category    ScandiPWA
+ * @package     ScandiPWA_CmsGraphQl
+ * @copyright   Copyright © Scandiweb, Inc. All rights reserved.
+ * @copyright   Modifications © Selveq. All rights reserved.
+ * @license     OSL-3.0 (Open Software License ("OSL") v. 3.0)
  * See LICENSE for license details.
- *
- * @license OSL-3.0 (Open Software License ("OSL") v. 3.0)
  */
 -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
     <module name="ScandiPWA_CmsGraphQl">
         <sequence>
-            <module name="Magento_Store"/>
-            <module name="Magento_Variable"/>
-            <module name="Magento_Widget"/>
-            <module name="Magento_CmsGraphQl"/>
-            <module name="Magento_Cms"/>
+            <module name="Magento_Store" />
+            <module name="Magento_Variable" />
+            <module name="Magento_Widget" />
+            <module name="Magento_CmsGraphQl" />
+            <module name="Magento_Cms" />
+            <module name="Magento_Email" />
+            <module name="ScandiPWA_PersistedQuery" />
         </sequence>
     </module>
 </config>

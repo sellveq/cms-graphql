@@ -1,25 +1,20 @@
 <?php
+
 /**
- * ScandiPWA_CmsGraphQl
- *
- * @category    Scandiweb
+ * @category    ScandiPWA
  * @package     ScandiPWA_CmsGraphQl
- * @copyright   Copyright (c) 2018 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Copyright © 2018 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Modifications © Selveq. All rights reserved.
+ * @license     OSL-3.0 (Open Software License ("OSL") v. 3.0)
+ * See LICENSE for license details.
  */
 
 namespace ScandiPWA\CmsGraphQl\Api\Data;
 
-/**
- * CMS page interface.
- * @api
- * @since 100.0.2
- */
-interface PageInterface extends \Magento\Cms\Api\Data\PageInterface
+use Magento\Cms\Api\Data\PageInterface as CorePageInterface;
+
+interface PageInterface extends CorePageInterface
 {
-    /**#@+
-     * Constants for keys of data array. Identical to the name of the getter in snake case
-     */
-    const URL_KEY                  = 'url_key';
-    const PAGE_WIDTH               = 'page_width';
-    /**#@-*/
+    public const string URL_KEY = 'url_key';
+    public const string PAGE_WIDTH = 'page_width';
 }

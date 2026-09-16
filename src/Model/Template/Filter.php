@@ -1,11 +1,13 @@
 <?php
+
 /**
- * ScandiPWA_CmsGraphQl
- *
- * @category    Scandiweb
+ * @category    ScandiPWA
  * @package     ScandiPWA_CmsGraphQl
- * @author      Artjoms Travkovs <artjoms.travkovs@scandiweb.com>
- * @copyright   Copyright (c) 2018 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Copyright 2013 Adobe. All Rights Reserved.
+ * @copyright   Copyright © 2018 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Modifications © Selveq. All rights reserved.
+ * @license     OSL-3.0 (Open Software License ("OSL") v. 3.0)
+ * See LICENSE for license details.
  */
 
 namespace ScandiPWA\CmsGraphQl\Model\Template;
@@ -26,34 +28,52 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Variable\Model\Source\Variables;
 use Magento\Variable\Model\VariableFactory;
 use Magento\Widget\Block\BlockInterface;
+use Magento\Widget\Model\ResourceModel\Widget as WidgetResource;
 use Magento\Widget\Model\Template\FilterEmulate;
 use Magento\Widget\Model\Widget;
 use Psr\Log\LoggerInterface;
+use ScandiPWA\CmsGraphQl\Api\AttributeHandlerInterface;
 
-/**
- * Class FilterEmulate
- * @package ScandiPWA\CmsGraphQl\Model\Template
- */
 class Filter extends FilterEmulate
 {
+    // a name reaches the theme as an attribute name, and the emitted form is name='value', so only a key may sit there
+    private const string PARAM_NAME_PATTERN = '/^[A-Za-z0-9_]+$/';
+
+    private const string PARAM_NAME_GUARD = 'widget_param_name';
+
+    private const string EXEMPT_VALUE_GUARD = 'widget_exempt_value';
 
     /**
-     * Array of keys that will not be escaped
-     * in custom widget html output
-     *
+     * keys that will not be escaped in custom widget html output
      * @var string[]
      */
     protected $widgetParamsWhitelist;
 
-    protected $widgetCustomParamsHandlers;
-
     /**
-     * Array of objects that will parsed to custom widget syntax
-     *
-     * @var object[]
+     * @param StringUtils $string
+     * @param LoggerInterface $logger
+     * @param Escaper $escaper
+     * @param Repository $assetRepo
+     * @param ScopeConfigInterface $scopeConfig
+     * @param VariableFactory $coreVariableFactory
+     * @param StoreManagerInterface $storeManager
+     * @param LayoutInterface $layout
+     * @param LayoutFactory $layoutFactory
+     * @param State $appState
+     * @param UrlInterface $urlModel
+     * @param Variables $configVariables
+     * @param VariableResolverInterface $variableResolver
+     * @param Css\Processor $cssProcessor
+     * @param Filesystem $pubDirectory
+     * @param CssInliner $cssInliner
+     * @param WidgetResource $widgetResource
+     * @param Widget $widget
+     * @param array $variables
+     * @param array $directiveProcessors
+     * @param string[] $availableFilters
+     * @param string[] $widgetUnescapedParams
+     * @param AttributeHandlerInterface[] $widgetCustomParamsHandlers
      */
-    public $availableFilters;
-
     public function __construct(
         StringUtils $string,
         LoggerInterface $logger,
@@ -71,13 +91,13 @@ class Filter extends FilterEmulate
         Css\Processor $cssProcessor,
         Filesystem $pubDirectory,
         CssInliner $cssInliner,
-        \Magento\Widget\Model\ResourceModel\Widget $widgetResource,
+        WidgetResource $widgetResource,
         Widget $widget,
-        $variables,
-        array $directiveProcessors,
-        array $availableFilters,
-        array $widgetUnescapedParams,
-        array $widgetCustomParamsHandlers
+        $variables = [],
+        array $directiveProcessors = [],
+        private readonly array $availableFilters = [],
+        array $widgetUnescapedParams = [],
+        private readonly array $widgetCustomParamsHandlers = []
     ) {
         parent::__construct(
             $string,
@@ -98,18 +118,15 @@ class Filter extends FilterEmulate
             $cssInliner,
             $widgetResource,
             $widget,
-            $variables ?? [],
-            $directiveProcessors ?? []
+            $variables,
+            $directiveProcessors
         );
 
-        $this->availableFilters = $availableFilters;
         $this->widgetParamsWhitelist = $widgetUnescapedParams;
-        $this->widgetCustomParamsHandlers = $widgetCustomParamsHandlers;
     }
 
     /**
-     * General method for generate widget
-     *
+     * general method for generate widget
      * @param string[] $construction
      * @return string
      */
@@ -117,7 +134,6 @@ class Filter extends FilterEmulate
     {
         $params = $this->getParameters($construction[2]);
 
-        // Determine what name block should have in layout
         $name = null;
         if (isset($params['name'])) {
             $name = $params['name'];
@@ -127,7 +143,6 @@ class Filter extends FilterEmulate
             $params['store_id'] = $this->_storeId;
         }
 
-        // validate required parameter type or id
         if (!empty($params['type'])) {
             $type = $params['type'];
         } elseif (!empty($params['id'])) {
@@ -144,11 +159,11 @@ class Filter extends FilterEmulate
             return '';
         }
 
-        if ($widgetName = array_search($params['type'], $this->availableFilters)) {
+        // the {{widget id="N"}} branch replaced $params, so the match is on $type and not on $params['type']
+        if ($widgetName = array_search($type, $this->availableFilters)) {
             return $this->widgetToHtml($params, $widgetName);
         }
 
-        // define widget block and check the type is instance of Widget Interface
         $widget = $this->_layout->createBlock($type, $name, ['data' => $params]);
         if (!$widget instanceof BlockInterface) {
             return '';
@@ -158,8 +173,7 @@ class Filter extends FilterEmulate
     }
 
     /**
-     * Generates widget html-like instructions
-     *
+     * generates widget html-like instructions
      * @param string[] $params
      * @param string $widgetName
      * @return string
@@ -171,9 +185,23 @@ class Filter extends FilterEmulate
 
         $paramsList = [];
         foreach ($params as $key => $value) {
+            if (!preg_match(self::PARAM_NAME_PATTERN, (string)$key)) {
+                $this->_logger->warning(sprintf(
+                    '%s: %s dropped one parameter, name length %d',
+                    self::PARAM_NAME_GUARD,
+                    $widgetName,
+                    strlen((string)$key)
+                ));
+
+                continue;
+            }
+
             if (key_exists($key, $this->widgetCustomParamsHandlers)) {
-                $value = $this->widgetCustomParamsHandlers[$key]->resolve($value);
-            } elseif (!in_array($key, $this->widgetParamsWhitelist)) {
+                $resolved = $this->widgetCustomParamsHandlers[$key]->resolve($value);
+                $value = $this->guardExemptValue($widgetName, $key, $resolved);
+            } elseif (in_array($key, $this->widgetParamsWhitelist)) {
+                $value = $this->guardExemptValue($widgetName, $key, (string)$value);
+            } else {
                 $value = $this->_escaper->escapeHtmlAttr($value);
             }
 
@@ -183,5 +211,28 @@ class Filter extends FilterEmulate
         $attributes = implode(' ', $paramsList);
 
         return "<widget $attributes></widget>";
+    }
+
+    /**
+     * a whitelisted key and a handler's return skip escapeHtmlAttr(), so the quote that ends the attribute is checked
+     * @param string $widgetName
+     * @param string $key
+     * @param string $value
+     * @return string
+     */
+    private function guardExemptValue(string $widgetName, string $key, string $value): string
+    {
+        if (!str_contains($value, "'")) {
+            return $value;
+        }
+
+        $this->_logger->warning(sprintf(
+            '%s: %s escaped an exempt value on %s',
+            self::EXEMPT_VALUE_GUARD,
+            $widgetName,
+            $key
+        ));
+
+        return $this->_escaper->escapeHtmlAttr($value);
     }
 }

@@ -1,15 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
+
 <!--
 /**
- * ScandiPWA_CmsGraphQl
- *
- * @category    Scandiweb
+ * @category    ScandiPWA
  * @package     ScandiPWA_CmsGraphQl
- * @copyright   Copyright (c) 2018 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Copyright © 2018 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Modifications © Selveq. All rights reserved.
+ * @license     OSL-3.0 (Open Software License ("OSL") v. 3.0)
+ * See LICENSE for license details.
  */
 -->
 
-<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
     <fieldset name="design">
         <field name="page_width" formElement="select">
             <argument name="data" xsi:type="array">
@@ -25,7 +28,7 @@
             <formElements>
                 <select>
                     <settings>
-                        <options class="ScandiPWA\CmsGraphQl\Model\Page\Source\PageWidth"/>
+                        <options class="ScandiPWA\CmsGraphQl\Model\Page\Source\PageWidth" />
                     </settings>
                 </select>
             </formElements>

@@ -1,82 +1,43 @@
 <?php
+
 /**
- * ScandiPWA_CmsGraphQl
- *
- * @category    Scandiweb
+ * @category    ScandiPWA
  * @package     ScandiPWA_CmsGraphQl
- * @copyright   Copyright (c) 2022 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Copyright © 2022 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Modifications © Selveq. All rights reserved.
+ * @license     OSL-3.0 (Open Software License ("OSL") v. 3.0)
+ * See LICENSE for license details.
  */
+
 declare(strict_types=1);
 
 namespace ScandiPWA\CmsGraphQl\Plugin;
 
-use Exception;
-use Magento\Framework\App\Area;
-use Magento\Framework\App\FrontControllerInterface;
+use Magento\Framework\App\AreaInterface;
 use Magento\Framework\App\AreaList;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
 use ScandiPWA\PersistedQuery\Plugin\PersistedQuery;
 
-/**
- * Class InitGraphQlTranslations
- *
- * A fix for https://github.com/magento/magento2/issues/31351
- *
- * @see \Magento\Framework\App\Action\Plugin\Design
- * @see \Magento\Webapi\Controller\Soap
- * @package ScandiPWA\CmsGraphQl\Plugin
- */
 class InitGraphQlTranslations
 {
-    /**
-     * Application
-     *
-     * @var AreaList
-     */
-    protected AreaList $areaList;
-
-    /**
-     * State
-     *
-     * @var State
-     */
-    protected State $appState;
-
     /**
      * @param AreaList $areaList
      * @param State $appState
      */
     public function __construct(
-        AreaList $areaList,
-        State $appState
-    ) {
-        $this->areaList = $areaList;
-        $this->appState = $appState;
-    }
+        private readonly AreaList $areaList,
+        private readonly State $appState
+    ) {}
 
     /**
-     * @param FrontControllerInterface $subject
-     * @param RequestInterface $request
-     *
-     * @return void
-     * @throws Exception
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function beforeDispatch(
-        FrontControllerInterface $subject,
-        RequestInterface $request
-    ) {
-        $this->initTranslations();
-    }
-
-    /**
+     * initialize GraphQL translations before persisted query request processing.
      * @param PersistedQuery $subject
      * @param RequestInterface $request
      * @return void
-     * @throws LocalizedException
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @throws LocalizedException
      */
     public function beforeProcessRequest(
         PersistedQuery $subject,
@@ -86,13 +47,14 @@ class InitGraphQlTranslations
     }
 
     /**
+     * initialize translations for the current area.
      * @return void
+     * @throws LocalizedException
      */
-    protected function initTranslations() {
+    protected function initTranslations()
+    {
         $area = $this->areaList->getArea($this->appState->getAreaCode());
 
-        if ($area) {
-            $area->load(Area::PART_TRANSLATE);
-        }
+        $area?->load(AreaInterface::PART_TRANSLATE);
     }
 }

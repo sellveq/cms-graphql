@@ -1,28 +1,22 @@
 <?php
+
 /**
- * ScandiPWA_CmsGraphQl
- *
- * @category    Scandiweb
+ * @category    ScandiPWA
  * @package     ScandiPWA_CmsGraphQl
- * @copyright   Copyright (c) 2018 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Copyright © 2018 Scandiweb, Ltd (https://scandiweb.com)
+ * @copyright   Modifications © Selveq. All rights reserved.
+ * @license     OSL-3.0 (Open Software License ("OSL") v. 3.0)
+ * See LICENSE for license details.
  */
 
 namespace ScandiPWA\CmsGraphQl\Model\Page\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
 
-/**
- * Class PageWidth
- */
 class PageWidth implements OptionSourceInterface
 {
     /**
-     * @var array
-     */
-    protected $options;
-
-    /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function toOptionArray()
     {
@@ -30,6 +24,7 @@ class PageWidth implements OptionSourceInterface
             'default' => 'default',
             'full' => 'full'
         ];
+
         $options = [];
 
         foreach ($configOptions as $key => $value) {
@@ -38,7 +33,6 @@ class PageWidth implements OptionSourceInterface
                 'value' => $key,
             ];
         }
-        $this->options = $options;
 
         return $options;
     }
